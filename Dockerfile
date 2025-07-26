@@ -23,9 +23,9 @@ COPY ./tsup.config.ts ./
 
 COPY ./Docker ./docker
 
-RUN chmod +x ./docker/scripts/* && dos2unix ./docker/scripts/*
-
 RUN ls ./docker/scripts
+
+RUN chmod +x ./docker/scripts/* && dos2unix ./docker/scripts/*
 
 RUN ./docker/scripts/generate_database.sh
 
