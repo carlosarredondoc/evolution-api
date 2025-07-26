@@ -1,37 +1,50 @@
-# STAGE 1: Builder
-FROM node:20-alpine AS builder
+# --- ETAPA 1: Builder (Construcción) ---
+# Usamos la imagen específica de Node.js que tu script requiere
+FROM node:20.10.0-alpine AS builder
 
-# Declara las variables que se necesitan durante el build
-ARG DATABASE_PROVIDER
-ARG DATABASE_CONNECTION_URI
+# Instalamos dependencias necesarias para la compilación
+RUN apk add --no-cache git python3 make g++
 
-# Hazlas disponibles como variables de entorno para los comandos RUN
-ENV DATABASE_PROVIDER=${DATABASE_PROVIDER}
-ENV DATABASE_CONNECTION_URI=${DATABASE_CONNECTION_URI}
+WORKDIR /app
 
-RUN apk update && \
-    apk add --no-cache git ffmpeg wget curl bash openssl
+# Copiamos package.json primero para aprovechar el caché de Docker
+COPY package.json package-lock.json* ./
+RUN npm install
 
-WORKDIR /evolution
-
-COPY ./package.json ./tsconfig.json ./
-RUN npm install --force
-
+# Copiamos el resto del código fuente
 COPY . .
 
-# Corrige los permisos y formato de los scripts
-RUN chmod +x ./Docker/scripts/* && dos2unix ./Docker/scripts/*
+# Generamos el cliente de Prisma (no necesita conexión a la BD)
+RUN npm run db:generate
 
-# Este script SÍ se ejecuta en el build, porque no necesita conexión a la BD
-RUN ./Docker/scripts/generate_database.sh
-
-# Compila la aplicación
+# Construimos la aplicación para producción
 RUN npm run build
 
-ENV TZ=America/Sao_Paulo
-ENV DOCKER_ENV=false
 
+# --- ETAPA 2: Final (Producción) ---
+# Usamos la misma imagen base para mantener la consistencia
+FROM node:20.10.0-alpine
+
+WORKDIR /app
+
+# Creamos un usuario no-root para ejecutar la aplicación por seguridad
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+# Copiamos solo los artefactos necesarios desde la etapa de construcción
+COPY --from=builder /app/package.json .
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+# Copiamos nuestro script de arranque (lo crearemos en el siguiente paso)
+COPY --chown=appuser:appgroup entrypoint.sh .
+RUN chmod +x ./entrypoint.sh
+
+# Exponemos el puerto que usará la aplicación
 EXPOSE 8080
 
-# Este es el comando final. Ejecuta las migraciones y LUEGO inicia la app.
-ENTRYPOINT ["/bin/bash", "-c", ". ./Docker/scripts/deploy_database.sh && npm run start:prod" ]
+# El ENTRYPOINT ejecutará nuestro script de arranque
+ENTRYPOINT [ "./entrypoint.sh" ]
+
+# El CMD es el comando por defecto que recibirá el entrypoint
+CMD [ "npm", "run", "start:prod" ]
