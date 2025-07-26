@@ -28,28 +28,8 @@ RUN ./docker/scripts/generate_database.sh
 # Compila la aplicación
 RUN npm run build
 
-
-# STAGE 2: Final Image
-FROM node:20-alpine AS final
-
-RUN apk update && \
-    apk add tzdata ffmpeg bash openssl
-
-WORKDIR /evolution
-
-# Copia solo lo necesario desde el builder
-COPY --from=builder /evolution/package.json ./package.json
-COPY --from=builder /evolution/package-lock.json ./package-lock.json
-COPY --from=builder /evolution/node_modules ./node_modules
-COPY --from=builder /evolution/dist ./dist
-COPY --from=builder /evolution/prisma ./prisma
-COPY --from=builder /evolution/manager ./manager
-COPY --from=builder /evolution/public ./public
-COPY --from=builder /evolution/docker ./docker
-COPY --from=builder /evolution/runWithProvider.js ./runWithProvider.js
-
 ENV TZ=America/Sao_Paulo
-ENV DOCKER_ENV=true
+ENV DOCKER_ENV=false
 
 EXPOSE 8080
 
