@@ -11,8 +11,5 @@ export_env_vars() {
 
             export "$key=$value"
         done < .env
-    else
-        echo ".env file not found"
-        exit 1
     fi
 }
