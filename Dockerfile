@@ -23,8 +23,6 @@ COPY ./tsup.config.ts ./
 
 COPY ./Docker ./docker
 
-RUN ls ./docker/scripts
-
 RUN chmod +x ./docker/scripts/* && dos2unix ./docker/scripts/*
 
 RUN ./docker/scripts/generate_database.sh
@@ -53,9 +51,13 @@ COPY --from=builder /evolution/docker ./docker
 COPY --from=builder /evolution/runWithProvider.js ./runWithProvider.js
 COPY --from=builder /evolution/tsup.config.ts ./tsup.config.ts
 
+
+COPY ./Docker ./docker
+
+RUN chmod +x ./docker/scripts/* && dos2unix ./docker/scripts/*
+
 ENV DOCKER_ENV=true
 
 EXPOSE 8080
 
-#ENTRYPOINT ["/bin/bash", "-c", ". ./evolution/docker/scripts/deploy_database.sh && npm run start:prod" ]
-ENTRYPOINT ["ls", "-lR"]
+ENTRYPOINT ["/bin/bash", "-c", ". ./docker/scripts/deploy_database.sh && npm run start:prod" ]
