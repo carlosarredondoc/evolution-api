@@ -29,32 +29,7 @@ RUN ./docker/scripts/generate_database.sh
 
 RUN npm run build
 
-FROM node:20-alpine AS final
-
-RUN apk update && \
-    apk add tzdata ffmpeg bash openssl
-
 ENV TZ=America/Sao_Paulo
-
-WORKDIR /evolution
-
-COPY --from=builder /evolution/package.json ./package.json
-COPY --from=builder /evolution/package-lock.json ./package-lock.json
-
-COPY --from=builder /evolution/node_modules ./node_modules
-COPY --from=builder /evolution/dist ./dist
-COPY --from=builder /evolution/prisma ./prisma
-COPY --from=builder /evolution/manager ./manager
-COPY --from=builder /evolution/public ./public
-COPY --from=builder /evolution/.env ./.env
-COPY --from=builder /evolution/docker ./docker
-COPY --from=builder /evolution/runWithProvider.js ./runWithProvider.js
-COPY --from=builder /evolution/tsup.config.ts ./tsup.config.ts
-
-
-COPY ./Docker ./docker
-
-RUN chmod +x ./docker/scripts/* && dos2unix ./docker/scripts/*
 
 ENV DOCKER_ENV=true
 
