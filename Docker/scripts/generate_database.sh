@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ./docker/scripts/env_functions.sh
+source ./Docker/scripts/env_functions.sh
 
 if [ "$DOCKER_ENV" != "true" ]; then
     export_env_vars
@@ -8,17 +8,8 @@ fi
 
 if [[ "$DATABASE_PROVIDER" == "postgresql" || "$DATABASE_PROVIDER" == "mysql" ]]; then
     export DATABASE_CONNECTION_URI
-    echo "Deploying migrations for $DATABASE_PROVIDER"
+    echo "Generating database for $DATABASE_PROVIDER"
     echo "Database URL: $DATABASE_CONNECTION_URI"
-    # rm -rf ./prisma/migrations
-    # cp -r ./prisma/$DATABASE_PROVIDER-migrations ./prisma/migrations
-    npm run db:deploy
-    if [ $? -ne 0 ]; then
-        echo "Migration failed"
-        exit 1
-    else
-        echo "Migration succeeded"
-    fi
     npm run db:generate
     if [ $? -ne 0 ]; then
         echo "Prisma generate failed"

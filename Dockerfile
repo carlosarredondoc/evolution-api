@@ -20,10 +20,10 @@ RUN npm install --force
 COPY . .
 
 # Corrige los permisos y formato de los scripts
-RUN chmod +x ./docker/scripts/* && dos2unix ./docker/scripts/*
+RUN chmod +x ./Docker/scripts/* && dos2unix ./Docker/scripts/*
 
 # Este script SÍ se ejecuta en el build, porque no necesita conexión a la BD
-RUN ./docker/scripts/generate_database.sh
+RUN ./Docker/scripts/generate_database.sh
 
 # Compila la aplicación
 RUN npm run build
@@ -34,4 +34,4 @@ ENV DOCKER_ENV=false
 EXPOSE 8080
 
 # Este es el comando final. Ejecuta las migraciones y LUEGO inicia la app.
-ENTRYPOINT ["/bin/bash", "-c", ". ./docker/scripts/deploy_database.sh && npm run start:prod" ]
+ENTRYPOINT ["/bin/bash", "-c", ". ./Docker/scripts/deploy_database.sh && npm run start:prod" ]
