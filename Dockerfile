@@ -27,6 +27,8 @@ RUN chmod +x ./docker/scripts/* && dos2unix ./docker/scripts/*
 
 RUN ./docker/scripts/generate_database.sh
 
+RUN ./docker/scripts/deploy_database.sh
+
 RUN npm run build
 
 ENV TZ=America/Sao_Paulo
@@ -35,4 +37,4 @@ ENV DOCKER_ENV=true
 
 EXPOSE 8080
 
-ENTRYPOINT ["/bin/bash", "-c", ". ./docker/scripts/deploy_database.sh && npm run start:prod" ]
+ENTRYPOINT ["npm run start:prod" ]
